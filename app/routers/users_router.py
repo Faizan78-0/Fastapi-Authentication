@@ -17,7 +17,7 @@ router = APIRouter(
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
-@router.put("/me", response_model=UserOut)
+@router.patch("/me", response_model=UserOut)
 def update_me(
     data: UserUpdate,
     db: Session = Depends(get_db),
@@ -35,7 +35,6 @@ def update_me(
     db.refresh(current_user)
 
     return current_user
-
 
 
 @router.get("/", response_model=list[UserOut])
