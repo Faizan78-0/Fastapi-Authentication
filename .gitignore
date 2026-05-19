@@ -40,3 +40,4 @@ htmlcov/
 # Application temp files
 uploads/
 temp/
+alembic.ini
