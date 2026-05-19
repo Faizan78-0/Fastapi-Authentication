@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 
 from app.oauth2 import  get_current_user, require_role
@@ -42,7 +42,7 @@ def get_users(
     db: Session = Depends(get_db),
     admin: User = Depends(require_role("admin"))
 ):
-    return db.query(User).all()
+    return db.query(User).options(joinedload(User.posts)).all()
 
 
 @router.delete("/{id}")
@@ -61,7 +61,7 @@ def deactivate_user(id: int, db: Session = Depends(get_db), admin: User = Depend
     return {"message": "User deactivated"}
 
 
-@router.put("/{id}/activate")
+@router.post("/{id}/activate")
 def activate_user(id: int, db: Session = Depends(get_db), admin: User = Depends(require_role("admin"))):
     user = db.query(User).filter(User.id == id).first()
 

@@ -15,6 +15,7 @@ class UserOut(BaseModel):
     email: EmailStr
     role: str
     is_active: bool
+    posts : list["PostOut"] = []
 
     class Config:
         from_attributes = True
@@ -30,3 +31,21 @@ class Token(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
 
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class CreatePost(BaseModel):
+    title: str
+    content: str
+
+class PostOut(BaseModel):
+    id: int
+    title: str
+    content: str
+
+    class Config:
+        from_attributes = True
