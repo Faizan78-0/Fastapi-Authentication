@@ -5,5 +5,8 @@ python-jose
 passlib[bcrypt]
 python-multipart
 python-dotenv
+psycopg2-binary
 pydantic[email]
 alembic
+pytest 
+httpx

@@ -1,4 +1,5 @@
 from passlib.context import CryptContext
+import random
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -7,3 +8,7 @@ def hash_password(password: str):
 
 def verify_password(plain, hashed):
     return pwd_context.verify(plain, hashed)
+
+def genrate_otp():
+
+    return str(random.randint(1000,9999))

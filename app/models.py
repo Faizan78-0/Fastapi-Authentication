@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -11,7 +11,8 @@ class User(Base):
     role = Column(String, default="user")
     is_active = Column(Boolean, default=True)
     refresh_token = Column(String, nullable=True)
-    reset_token = Column(String, nullable=True)
+    otp_code = Column(String, nullable=True)
+    otp_expiry = Column(DateTime, nullable=True)
 
     posts = relationship("Post", back_populates="owner", cascade="all,delete")
 

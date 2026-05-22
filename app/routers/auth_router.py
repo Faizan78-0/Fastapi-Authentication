@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
-
+from datetime import datetime,timedelta, timezone
 
 from app.models import User
-from app.schemas import UserCreate, ResetPasswordRequest, ForgotPasswordRequest
-from app.utils import hash_password, verify_password
+from app.schemas import UserCreate, VerifyOPT, ForgotPasswordRequest
+from app.utils import hash_password, verify_password, genrate_otp
 from app.auth import create_access_token, create_refresh_token, verify_token
-from app.tasks import send_welcome_email
+from app.tasks import send_welcome_email, send_opt_email
 
 
 router = APIRouter(prefix="/auth",tags=["Auth"])
@@ -63,34 +63,48 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 
 @router.post("/forgot_password")
-def forgot_password( data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password( data: ForgotPasswordRequest,background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Inactive user")
     
-    reset_token = create_access_token({"user_id": user.id})
-    user.reset_token = reset_token
+    opt = genrate_otp()
+    expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
+    user.otp_code = opt
+    user.otp_expiry = expiry
+
     db.commit()
-    return { "reset_token": reset_token}
+
+    background_tasks.add_task(send_opt_email, user.email, opt)
+    return { "message": "OPT sent to email"}
 
 
 @router.post("/reset_password")
-def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
-    payload = verify_token(data.token)
+def reset_password(data: VerifyOPT, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == data.email).first()
+    
 
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    user = db.query(User).filter(User.id == payload.get("user_id")).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not Found")
-
-    if user.reset_token != data.token:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Inactive user")
+    if user.otp_code != data.opt:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+    
+    if datetime.now() > user.otp_expiry:
+        raise HTTPException(status_code=400, detail="OPT expired")
+    
+   
+    
+    
 
     user.hashed_password = hash_password(data.new_password)
-    user.reset_token = None
+    user.otp_code = None
+    user.otp_expiry = None
+    
     db.commit()
     return { "message": "Password reset successful"}
  

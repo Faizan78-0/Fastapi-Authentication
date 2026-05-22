@@ -5,7 +5,8 @@ import time
 #from app.database import Base, engine
 from app.routers import auth_router
 from app.routers import users_router
-from app.routers import posts_routs
+from app.routers import posts_router
+from app.middleware import logging_middleware
 
 #Base.metadata.create_all(bind=engine)
 
@@ -18,21 +19,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.middleware("http")(logging_middleware)
 
 app.include_router(auth_router.router)
 app.include_router(users_router.router)
-app.include_router(posts_routs.router)
+app.include_router(posts_router.router)
 
-@app.middleware("http")
-async def logging_middleware(request: Request, call_next):
-    start_time = time.time()
 
-    response = await call_next(request)
 
-    process_time = time.time() - start_time
-    print(f"{request.method} {request.url} - {process_time:.4f}s")
-
-    return response
 
 @app.get("/")
 def read_root():

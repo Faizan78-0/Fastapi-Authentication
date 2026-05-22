@@ -31,8 +31,9 @@ class Token(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
 
-class ResetPasswordRequest(BaseModel):
-    token: str
+class VerifyOPT(BaseModel):
+    email: str
+    opt: str
     new_password: str
 
 class ForgotPasswordRequest(BaseModel):
@@ -49,3 +50,5 @@ class PostOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+    

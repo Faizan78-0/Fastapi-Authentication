@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.models import Post, User
 from app.schemas import CreatePost, PostOut
-from app.oauth2 import get_current_user
+from app.oauth2 import get_current_user, require_role
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -25,6 +25,12 @@ def get_posts(db: Session = Depends(get_db), current_user: User = Depends(get_cu
     if not posts:
         raise HTTPException(status_code=404, detail="No posts found")
 
+    return posts
+
+@router.get("/all", response_model=list[PostOut])
+def get_all_posts(db: Session = Depends(get_db), admin: User = Depends(require_role("admin"))):
+
+    posts = db.query(Post).all()
     return posts
 
 @router.delete("/{post_id}")
