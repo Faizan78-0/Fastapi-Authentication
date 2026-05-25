@@ -12,7 +12,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: myapp
+      POSTGRES_DB: User_db
     volumes:
       - pgdata:/var/lib/postgresql/data
 volumes:
