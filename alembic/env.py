@@ -1,6 +1,7 @@
 from logging.config import fileConfig
 from app.database import Base
 from app.models import *
+import os
 
 
 from sqlalchemy import engine_from_config
@@ -22,6 +23,23 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
+
+# ✅ GET DATABASE URL FROM RAILWAY ENV
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is missing!")
+
+# ✅ Railway sometimes uses postgres://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgres://",
+        "postgresql://",
+        1
+    )
+
+# ✅ Inject Railway DB URL into Alembic
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
